@@ -2,12 +2,19 @@ use std::collections::HashSet;
 use std::u64;
 
 pub fn find_saddle_points(input: &[Vec<u64>]) -> Vec<(usize, usize)> {
-    let mut greatests: HashSet<(usize, usize)> = HashSet::new();
-    let mut smallests: HashSet<(usize, usize)> = HashSet::new();
-    let mut width = 0;
+    let (greatests, width) = find_greatests(input);
+    let smallests = find_smallests(input, width);
 
+    let saddle_points = greatests.intersection(&smallests);
+    saddle_points.cloned().collect()
+}
+
+fn find_greatests(input: &[Vec<u64>]) -> (HashSet<(usize, usize)>, usize) {
+    let mut greatests: HashSet<(usize, usize)> = HashSet::new();
+    let mut width = 0;
     for (x, row) in input.iter().enumerate() {
         if row.len() > width {
+            // matrix can be jagged so keep size of widest row so we can iterate later
             width = row.len()
         };
         let mut greatest_so_far = &0u64;
@@ -26,11 +33,16 @@ pub fn find_saddle_points(input: &[Vec<u64>]) -> Vec<(usize, usize)> {
             greatests.insert(g);
         }
     }
+    (greatests, width)
+}
 
+fn find_smallests(input: &[Vec<u64>], width: usize) -> HashSet<(usize, usize)> {
+    let mut smallests: HashSet<(usize, usize)> = HashSet::new();
     for y in 0..width {
         let mut smallest_so_far = u64::max_value();
         let mut smallest_in_column: Vec<(usize, usize)> = Vec::new();
         for (x, row) in input.iter().enumerate() {
+            // matrix can be jagged so bail if this row is shorter than width
             if y >= row.len() {
                 break;
             }
@@ -48,6 +60,5 @@ pub fn find_saddle_points(input: &[Vec<u64>]) -> Vec<(usize, usize)> {
             smallests.insert(s);
         }
     }
-    let saddle_points = greatests.intersection(&smallests);
-    saddle_points.cloned().collect()
+    smallests
 }
